@@ -4,7 +4,7 @@ const mysql = require('mysql2');
 
 // ===================== 数据库直连配置（你后台的信息，直接写死） =====================
 const dbConfig = {
-  host: "mysql33a5e2f7bae9.rds.ivol",  // 你后台 MYSQL_ADDRESS
+  host: "mysql33a5e2f7bae9.rds.ivolces.com",  // 你后台 MYSQL_ADDRESS
   port: 3306,
   user: "yqhy1194230100",             // 你后台 MYSQL_USERNAME
   password: "Lfc199688",           // 你后台 MYSQL_PASSWORD
