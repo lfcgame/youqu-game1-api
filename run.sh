@@ -1,1 +1,1 @@
-npx ts-node src/server.ts
+node src/server.js
