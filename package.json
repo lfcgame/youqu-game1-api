@@ -4,6 +4,7 @@
   "main": "src/server.js",
   "dependencies": {
     "@open-dy/node-server-sdk": "^1.0.0",
+    "@byted-cn/serverless": "^1.0.0",
     "mysql2": "^3.6.0"
   }
 }
