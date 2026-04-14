@@ -1,1 +1,1 @@
-node src/server.js
+chmod +x run.sh && node src/server.js
