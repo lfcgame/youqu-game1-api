@@ -94,6 +94,13 @@ initService().then(async ({ redis, mongoose}) => {
             success: true,
         }
     });
+    // 加一个你自己的接口
+router.get('/api/your_api', async (ctx) => {
+    ctx.body = {
+        success: true,
+        msg: "这是你自己的接口"
+    }
+});
 
     app.use(bodyParser());
     app.use(router.routes());
