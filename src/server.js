@@ -2,13 +2,24 @@ const http = require('http');
 const { dySDK } = require('@open-dy/node-server-sdk');
 const mysql = require('mysql2');
 
-// ===================== 数据库配置（适配你的抖音云环境变量）=====================
-const address = process.env.DB_MYSQL_ADDRESS || '127.0.0.1:3306';
-const [host, port] = address.split(':');
+// ===================== 数据库配置（适配抖音云环境变量，100% 对应你后台）=====================
+let host = '127.0.0.1';
+let port = 3306;
+
+// 读取你后台的三个 KEY
+if (process.env.DB_MYSQL_ADDRESS) {
+  const addr = process.env.DB_MYSQL_ADDRESS;
+  if (addr.includes(':')) {
+    host = addr.split(':')[0];
+    port = addr.split(':')[1] || 3306;
+  } else {
+    host = addr;
+  }
+}
 
 const dbConfig = {
   host: host,
-  port: port || 3306,
+  port: port,
   user: process.env.DB_MYSQL_ACCOUNT || 'root',
   password: process.env.DB_PASSWORD || '',
   database: 'youqu_game',
