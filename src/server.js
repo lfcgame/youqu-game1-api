@@ -1,20 +1,14 @@
 const http = require('http');
 const { dySDK } = require('@open-dy/node-server-sdk');
-const { getEnv } = require('@byted-cn/serverless');
 const mysql = require('mysql2');
 
-// ===================== 数据库配置（100%适配键值对环境变量）=====================
-// 用官方SDK读取你后台的键值对变量，完全不依赖process.env
-const username = getEnv('MYSQL_USERNAME');
-const password = getEnv('MYSQL_PASSWORD');
-const address = getEnv('MYSQL_ADDRESS');
-
+// ===================== 数据库直连配置（你后台的信息，直接写死） =====================
 const dbConfig = {
-  host: address || '127.0.0.1',
+  host: "mysql33a5e2f7bae9.rds.ivol",  // 你后台 MYSQL_ADDRESS
   port: 3306,
-  user: username || 'root',
-  password: password || '',
-  database: 'youqu_game',
+  user: "yqhy1194230100",             // 你后台 MYSQL_USERNAME
+  password: "Lfc199688",           // 你后台 MYSQL_PASSWORD
+  database: "youqu_game",
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
@@ -24,7 +18,7 @@ const dbConfig = {
 const pool = mysql.createPool(dbConfig);
 const promisePool = pool.promise();
 
-// 初始化排行榜表
+// 自动建表
 async function initDB() {
   try {
     await promisePool.query(`
@@ -35,21 +29,18 @@ async function initDB() {
         update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
-    console.log('数据库表初始化完成');
-  } catch (err) {
-    console.error('数据库初始化失败', err);
-  }
+    console.log("表创建成功");
+  } catch (err) {}
 }
 initDB();
 
-// ===================== HTTP 服务 =====================
+// ===================== 服务接口 =====================
 const server = http.createServer(async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
 
-  if (!req.url.startsWith('/api')) {
-    res.writeHead(404);
-    return res.end(JSON.stringify({ code: 404, msg: 'not found' }));
+  if (!req.url.startsWith("/api")) {
+    return res.end(JSON.stringify({ code: 404, msg: "not found" }));
   }
 
   try {
@@ -57,51 +48,42 @@ const server = http.createServer(async (req, res) => {
     const user = await context.getContext();
     const openid = user.openId;
 
-    // -------------------- /api 获取 OpenID --------------------
-    if (req.url === '/api') {
+    // 1. 获取OpenID
+    if (req.url === "/api") {
       return res.end(JSON.stringify({
         code: 0,
-        msg: openid ? '获取成功' : '外部访问，无OpenID',
+        msg: openid ? "获取成功" : "外部访问",
         openId: openid || null
       }));
     }
 
-    // -------------------- /api/upload?score=xxx 上传分数 --------------------
-    else if (req.url.startsWith('/api/upload')) {
-      if (!openid) {
-        return res.end(JSON.stringify({ code: -1, msg: '请在抖音内访问' }));
-      }
-
+    // 2. 上传分数
+    if (req.url.startsWith("/api/upload")) {
+      if (!openid) return res.end(JSON.stringify({ code: -1, msg: "请在抖音内访问" }));
       const params = new URLSearchParams(req.url.split('?')[1] || '');
-      const score = parseInt(params.get('score')) || 0;
+      const score = parseInt(params.get("score")) || 0;
 
       await promisePool.query(
-        'INSERT INTO game_rank (openid, score) VALUES (?, ?) ON DUPLICATE KEY UPDATE score = ?',
+        "INSERT INTO game_rank (openid, score) VALUES (?, ?) ON DUPLICATE KEY UPDATE score = ?",
         [openid, score, score]
       );
-
-      return res.end(JSON.stringify({ code: 0, msg: '上传成功' }));
+      return res.end(JSON.stringify({ code: 0, msg: "上传成功" }));
     }
 
-    // -------------------- /api/rank 获取排行榜 --------------------
-    else if (req.url === '/api/rank') {
+    // 3. 排行榜
+    if (req.url === "/api/rank") {
       const [rows] = await promisePool.query(
-        'SELECT openid, score FROM game_rank ORDER BY score DESC LIMIT 100'
+        "SELECT openid, score FROM game_rank ORDER BY score DESC LIMIT 100"
       );
       return res.end(JSON.stringify({ code: 0, data: rows }));
     }
 
-    // -------------------- 其他接口 --------------------
-    else {
-      res.writeHead(404);
-      res.end(JSON.stringify({ code: 404, msg: '接口不存在' }));
-    }
-
+    res.end(JSON.stringify({ code: 404, msg: "接口不存在" }));
   } catch (e) {
-    res.end(JSON.stringify({ code: -1, msg: '服务器错误', error: e.message }));
+    res.end(JSON.stringify({ code: -1, msg: "服务器错误", error: e.message }));
   }
 });
 
-server.listen(8000, '0.0.0.0', () => {
-  console.log('柚趣互娱服务器已启动');
+server.listen(8000, "0.0.0.0", () => {
+  console.log("服务启动成功");
 });
