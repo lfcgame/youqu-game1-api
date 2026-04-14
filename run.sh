@@ -1,1 +1,1 @@
-npm run serve
+npx ts-node src/server.ts
